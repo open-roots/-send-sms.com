@@ -1,59 +1,39 @@
 const express = require('express');
-const cors = require('cors');
 const axios = require('axios');
-const path = require('path');
-
+const cors = require('cors');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors()); // Allows your website to talk to this server
 
-const TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhdCI6MTc3MTE5MTk1MiwiZXhwIjoxOTI4ODcxOTUyfQ.1uO3OU7au_N9-1T-OCt92f39VnmVF51md_5Fm6O81o-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w";
+// Your Secret Credentials (In a real app, use Environment Variables!)
+const AUTH_TOKEN = "eyJhbGciOiJIUzUxMiJ9...[YOUR_FULL_TOKEN]";
+const CUSTOMER_ID = "C-9942297ABD3B40F";
 
-// Health check to prevent 503 errors
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: "Online" });
-});
-
-// FIXED: Added 'async' back to the function definition below
 app.post('/send-sms', async (req, res) => {
-    const { apiType, phone, senderId, message } = req.body;
-    
-    let url = apiType === 'message' 
-        ? "https://cpaas.messagecentral.com/message/v1/send" 
-        : "https://api.messagecentral.com/verify/send";
-
-    let payload = apiType === 'message' ? {
-        mobileNumber: phone,
-        senderId: senderId,
-        message: message,
-        type: "SMS",
-        flowType: "SMS",
-        messageType: "TRANSACTIONAL"
-    } : {
-        phone_number: phone,
-        channel: "sms"
-    };
+    const { phone, message, senderId, countryCode } = req.body;
 
     try {
-        const result = await axios.post(url, payload, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${TOKEN}`
-            }
+        const url = `https://cpaas.messagecentral.com/verification/v3/send`;
+        
+        const response = await axios.post(url, {}, {
+            params: {
+                countryCode: countryCode || "234",
+                customerId: CUSTOMER_ID,
+                senderId: senderId || "UTOMOB",
+                type: "SMS",
+                flowType: "SMS",
+                mobileNumber: phone,
+                message: message
+            },
+            headers: { 'authToken': AUTH_TOKEN }
         });
-        res.status(200).json(result.data);
-    } catch (err) {
-        console.error("API Error:", err.response ? err.response.data : err.message);
-        res.status(500).json({ 
-            error: "Gateway Error", 
-            details: err.response ? err.response.data : err.message 
-        });
+
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is live on port ${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
