@@ -1,39 +1,41 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
+const cors = require('cors'); // 1. Add this
 const app = express();
 
-// This allows the server to read data sent from your HTML form
+app.use(cors()); // 2. Enable CORS for all origins
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// This tells the server where your HTML/CSS files are located
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Your Hardcoded Token
 const MY_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhdCI6MTc3MTE5MTk1MiwiZXhwIjoxOTI4ODcxOTUyfQ.1uO3OU7au_N9-1T-OCt92f39VnmVF51md_5Fm6O81o-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w";
 
-// The Route that handles the SMS sending
 app.post('/send-sms', async (req, res) => {
     try {
         const { apiType, phone, senderId, message } = req.body;
-        
-        let endpoint, payload;
+        let endpoint = apiType === 'message' 
+            ? "https://cpaas.messagecentral.com/message/v1/send" 
+            : "https://api.messagecentral.com/verify/send";
 
-        if (apiType === 'message') {
-            endpoint = "https://cpaas.messagecentral.com/message/v1/send";
-            payload = {
-                "mobileNumber": phone,
-                "senderId": senderId,
-                "message": message,
-                "type": "SMS",
-                "flowType": "SMS",
-                "messageType": "TRANSACTIONAL"
-            };
-        } else {
-            endpoint = "https://api.messagecentral.com/verify/send";
-            payload = {
-                "phone_number": phone,
+        const response = await axios.post(endpoint, {
+            mobileNumber: phone,
+            senderId: senderId,
+            message: message,
+            type: "SMS",
+            flowType: "SMS",
+            messageType: "TRANSACTIONAL"
+        }, {
+            headers: { 'Authorization': `Bearer ${MY_TOKEN}` }
+        });
+
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
                 "channel": "sms"
             };
         }
