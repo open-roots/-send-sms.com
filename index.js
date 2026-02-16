@@ -1,39 +1,54 @@
 const express = require('express');
+const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
-const cors = require('cors');
-const app = express();
 
-// Enable CORS and JSON parsing
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-const MY_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhdCI6MTc3MTE5MTk1MiwiZXhwIjoxOTI4ODcxOTUyfQ.1uO3OU7au_N9-1T-OCt92f39VnmVF51md_5Fm6O81o-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w";
+// Your specific Auth Token
+const TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhdCI6MTc3MTE5MTk1MiwiZXhwIjoxOTI4ODcxOTUyfQ.1uO3OU7au_N9-1T-OCt92f39VnmVF51md_5Fm6O81o-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w";
 
 app.post('/send-sms', async (req, res) => {
-    try {
-        const { apiType, phone, senderId, message } = req.body;
-        
-        let endpoint, payload;
+    const { apiType, phone, senderId, message } = req.body;
+    
+    let url = apiType === 'message' 
+        ? "https://cpaas.messagecentral.com/message/v1/send" 
+        : "https://api.messagecentral.com/verify/send";
 
-        if (apiType === 'message') {
-            endpoint = "https://cpaas.messagecentral.com/message/v1/send";
-            payload = {
-                "mobileNumber": phone,
-                "senderId": senderId,
-                "message": message,
-                "type": "SMS",
-                "flowType": "SMS",
-                "messageType": "TRANSACTIONAL"
-            };
-        } else {
-            endpoint = "https://api.messagecentral.com/verify/send";
-            payload = {
-                "phone_number": phone,
-                "channel": "sms"
+    let payload = apiType === 'message' ? {
+        mobileNumber: phone,
+        senderId: senderId,
+        message: message,
+        type: "SMS",
+        flowType: "SMS",
+        messageType: "TRANSACTIONAL"
+    } : {
+        phone_number: phone,
+        channel: "sms"
+    };
+
+    try {
+        const result = await axios.post(url, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${TOKEN}`
+            }
+        });
+        res.status(200).json(result.data);
+    } catch (err) {
+        res.status(500).json(err.response ? err.response.data : { error: err.message });
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
             };
         }
 
