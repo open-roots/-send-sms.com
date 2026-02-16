@@ -9,9 +9,12 @@ const PORT = process.env.PORT || 3000;
 // Security and Data settings
 app.use(cors());
 app.use(express.json());
+
+// Only keep this if you have a folder named "public" with HTML files in it!
 app.use(express.static(path.join(__dirname, 'public')));
 
-const TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhdCI6MTc3MTE5MTk1MiwiZXhwIjoxOTI4ODcxOTUyfQ.1uO3OU7au_N9-1T-OCt92f39VnmVF51md_5Fm6O81o-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w";
+// Fetch token securely from Environment Variables
+const TOKEN = process.env.MESSAGE_CENTRAL_TOKEN;
 
 app.post('/send-sms', async (req, res) => {
     const { apiType, phone, senderId, message } = req.body;
@@ -41,77 +44,12 @@ app.post('/send-sms', async (req, res) => {
         });
         res.status(200).json(result.data);
     } catch (err) {
+        // Safe error logging
+        console.error("SMS API Error:", err.response?.data || err.message);
         res.status(500).json(err.response ? err.response.data : { error: err.message });
     }
 });
 
 app.listen(PORT, () => {
     console.log(`Server is live on port ${PORT}`);
-});
-        const result = await axios.post(url, payload, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${TOKEN}`
-            }
-        });
-        res.status(200).json(result.data);
-    } catch (err) {
-        res.status(500).json(err.response ? err.response.data : { error: err.message });
-    }
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-            };
-        }
-
-        const response = await axios.post(endpoint, payload, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${MY_TOKEN}`
-            }
-        });
-
-        res.json(response.data);
-    } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: error.response ? error.response.data : error.message 
-        });
-    }
-});
-
-// CRITICAL: Must use process.env.PORT for Render
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-                "channel": "sms"
-            };
-        }
-
-        const response = await axios.post(endpoint, payload, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${MY_TOKEN}`
-            }
-        });
-
-        res.json(response.data);
-    } catch (error) {
-        console.error('Error details:', error.response ? error.response.data : error.message);
-        res.status(500).json({ 
-            success: false, 
-            error: error.response ? error.response.data : "Internal Server Error" 
-        });
-    }
-});
-
-// Use the port Render gives us, or 3000 locally
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
 });
