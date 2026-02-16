@@ -1,13 +1,18 @@
 {
-  "name": "sms-gateway",
+  "name": "sms-gateway-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Backend bridge for Message Central SMS",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "express": "^4.18.2",
     "axios": "^1.6.0",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
