@@ -1,11 +1,14 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
-const cors = require('cors'); // 1. Add this
+const cors = require('cors');
 const app = express();
 
-app.use(cors()); // 2. Enable CORS for all origins
+// Enable CORS and JSON parsing
+app.use(cors());
 app.use(express.json());
+
+// Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
 const MY_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhdCI6MTc3MTE5MTk1MiwiZXhwIjoxOTI4ODcxOTUyfQ.1uO3OU7au_N9-1T-OCt92f39VnmVF51md_5Fm6O81o-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w";
@@ -13,27 +16,48 @@ const MY_TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhd
 app.post('/send-sms', async (req, res) => {
     try {
         const { apiType, phone, senderId, message } = req.body;
-        let endpoint = apiType === 'message' 
-            ? "https://cpaas.messagecentral.com/message/v1/send" 
-            : "https://api.messagecentral.com/verify/send";
+        
+        let endpoint, payload;
 
-        const response = await axios.post(endpoint, {
-            mobileNumber: phone,
-            senderId: senderId,
-            message: message,
-            type: "SMS",
-            flowType: "SMS",
-            messageType: "TRANSACTIONAL"
-        }, {
-            headers: { 'Authorization': `Bearer ${MY_TOKEN}` }
+        if (apiType === 'message') {
+            endpoint = "https://cpaas.messagecentral.com/message/v1/send";
+            payload = {
+                "mobileNumber": phone,
+                "senderId": senderId,
+                "message": message,
+                "type": "SMS",
+                "flowType": "SMS",
+                "messageType": "TRANSACTIONAL"
+            };
+        } else {
+            endpoint = "https://api.messagecentral.com/verify/send";
+            payload = {
+                "phone_number": phone,
+                "channel": "sms"
+            };
+        }
+
+        const response = await axios.post(endpoint, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${MY_TOKEN}`
+            }
         });
 
         res.json(response.data);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ 
+            success: false, 
+            error: error.response ? error.response.data : error.message 
+        });
     }
 });
 
+// CRITICAL: Must use process.env.PORT for Render
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
                 "channel": "sms"
