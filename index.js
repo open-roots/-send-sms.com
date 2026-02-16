@@ -6,13 +6,12 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Security and Data settings
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Your specific Auth Token
-const TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhdCI6MTc3MTE5MTk1MiwiZXhwIjoxOTI4ODcxOTUyfQ.1uO3OU7au_N9-1T-OCt92f39VnmVF51md_5Fm6O81o-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w";
+const TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhdCI6MTc3MTE5MTk1MiwiZXhwIjoxOTI4ODcxOTUyfQ.1uO3OU7au_N9-1T-OCt92f39VnmVF51md_5Fm6O81o-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w";
 
 app.post('/send-sms', async (req, res) => {
     const { apiType, phone, senderId, message } = req.body;
@@ -34,6 +33,21 @@ app.post('/send-sms', async (req, res) => {
     };
 
     try {
+        const result = await axios.post(url, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${TOKEN}`
+            }
+        });
+        res.status(200).json(result.data);
+    } catch (err) {
+        res.status(500).json(err.response ? err.response.data : { error: err.message });
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is live on port ${PORT}`);
+});
         const result = await axios.post(url, payload, {
             headers: {
                 'Content-Type': 'application/json',
