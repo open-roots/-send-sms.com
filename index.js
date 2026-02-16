@@ -6,15 +6,16 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security and Data settings
 app.use(cors());
 app.use(express.json());
-
-// Only keep this if you have a folder named "public" with HTML files in it!
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Fetch token securely from Environment Variables
-const TOKEN = process.env.MESSAGE_CENTRAL_TOKEN;
+const TOKEN = "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJDLTk5NDIyOTdBQkQzQjQwRiIsImlhdCI6MTc3MTE5MTk1MiwiZXhwIjoxOTI4ODcxOTUyfQ.1uO3OU7au_N9-1T-OCt92f39VnmVF51md_5Fm6O81o-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w-_qkB4kgjKj8HvXNXPe3nPU8yoxV-Rw5t0zhAtsNqz9w";
+
+// NEW: Health Check Route to wake up the server
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: "Online", message: "Server is awake and ready." });
+});
 
 app.post('/send-sms', async (req, res) => {
     const { apiType, phone, senderId, message } = req.body;
@@ -34,6 +35,28 @@ app.post('/send-sms', async (req, res) => {
         phone_number: phone,
         channel: "sms"
     };
+
+    try {
+        const result = await axios.post(url, payload, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${TOKEN}`
+            }
+        });
+        res.status(200).json(result.data);
+    } catch (err) {
+        // Improved Error Logging
+        console.error("Backend Error:", err.response ? err.response.data : err.message);
+        res.status(err.response ? err.response.status : 500).json({
+            error: "SMS Gateway Error",
+            details: err.response ? err.response.data : "Internal Server Error"
+        });
+    }
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is live on port ${PORT}`);
+});
 
     try {
         const result = await axios.post(url, payload, {
