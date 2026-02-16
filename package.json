@@ -1,7 +1,7 @@
 {
   "name": "sms-gateway-backend",
   "version": "1.0.0",
-  "description": "SMS Gateway hosted on Render with CORS bypass",
+  "description": "SMS Gateway for Message Central",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
