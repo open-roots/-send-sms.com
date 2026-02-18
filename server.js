@@ -1,16 +1,19 @@
 const express = require("express");
 const axios = require("axios");
+const cors = require("cors");
 
 const app = express();
+
+app.use(cors()); // ✅ allow frontend requests
 app.use(express.json());
 
 // ✅ Exactly 5 verified sender IDs
 const VERIFIED_SENDERS = [
-  "MySite",
-  "InfoSMS",
-  "Alert",
-  "Notify",
-  "Service"
+  "CraftPay Plc",
+  "CraftPay Plc",
+  "CraftPay Plc",
+  "CraftPay Plc",
+  "CraftPay Plc"
 ];
 
 // ✅ Your Infobip base URL already inserted
