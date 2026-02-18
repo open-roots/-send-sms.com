@@ -67,8 +67,14 @@ app.post("/send-sms", async (req, res) => {
       }
     );
 
-    res.json(response.data);
+    const msg = response.data.messages?.[0];
 
+res.json({
+  messageId: msg?.messageId,
+  status: msg?.status?.name,
+  description: msg?.status?.description
+});
+    
   } catch (error) {
     res.status(500).json({
       error: error.response?.data || error.message
